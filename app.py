@@ -1,0 +1,528 @@
+from datetime import datetime, timedelta
+from pathlib import Path
+
+import pandas as pd
+import streamlit as st
+
+
+APP_DIR = Path(__file__).parent
+DEFAULT_CSV = APP_DIR / "data" / "colaboradores.csv"
+TARGET_SUPERVISORS = {
+    "DANYELLA LAYSE SILVA TAVARES": "Danyella",
+    "OLÍVIA LETÍCIA GOMES VIANA": "Olívia",
+    "TROCA CASADA": "Troca casada",
+}
+SUPERVISOR_ORDER = {
+    "DANYELLA LAYSE SILVA TAVARES": 1,
+    "OLÍVIA LETÍCIA GOMES VIANA": 2,
+    "TROCA CASADA": 3,
+}
+WORKDAY_MINUTES = 6 * 60 + 20
+PAUSE_1_OFFSET = 90
+MEAL_OFFSET = 195
+PAUSE_2_OFFSET = 315
+
+
+st.set_page_config(
+    page_title="Controle de Pausas",
+    page_icon="⏱️",
+    layout="wide",
+    initial_sidebar_state="collapsed",
+)
+
+
+st.markdown(
+    """
+    <style>
+    :root {
+        --bg: #eef2f4;
+        --surface: #ffffff;
+        --surface-soft: #f6f8fa;
+        --ink: #111827;
+        --muted: #5b6675;
+        --line: #d9e0e7;
+        --primary: #0f766e;
+        --primary-dark: #134e4a;
+        --accent: #d97706;
+        --blue: #2563eb;
+        --success: #15803d;
+    }
+
+    .stApp {
+        background: var(--bg);
+    }
+
+    .block-container {
+        padding-top: 1.15rem;
+        padding-bottom: 2.5rem;
+        max-width: 1120px;
+    }
+
+    h1, h2, h3 {
+        color: var(--ink);
+        letter-spacing: 0;
+    }
+
+    h1 {
+        font-size: 2rem;
+        line-height: 1.15;
+        margin-bottom: 0.25rem;
+    }
+
+    p, label, span {
+        color: var(--ink);
+    }
+
+    div[data-testid="stCaptionContainer"] p {
+        color: var(--muted);
+        font-size: 0.96rem;
+    }
+
+    .app-hero {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-left: 6px solid var(--primary);
+        border-radius: 8px;
+        padding: 1.15rem 1.25rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 12px 28px rgba(17, 24, 39, 0.08);
+    }
+
+    .app-hero h1 {
+        color: var(--ink);
+        margin: 0;
+        font-size: 2rem;
+    }
+
+    .app-hero p {
+        color: var(--muted);
+        margin: 0.35rem 0 0 0;
+        max-width: 760px;
+        font-size: 0.98rem;
+    }
+
+    div[data-testid="stExpander"] {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        box-shadow: 0 10px 24px rgba(17, 24, 39, 0.06);
+    }
+
+    div[data-testid="stSelectbox"] label,
+    div[data-testid="stFileUploader"] label {
+        color: var(--ink);
+        font-weight: 650;
+    }
+
+    div[data-baseweb="select"] > div {
+        background: var(--surface);
+        border-color: var(--line);
+        border-radius: 8px;
+        min-height: 48px;
+        box-shadow: 0 8px 20px rgba(17, 24, 39, 0.05);
+    }
+
+    .kpi-card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-left: 5px solid var(--primary);
+        border-radius: 8px;
+        padding: 0.9rem 1rem;
+        box-shadow: 0 10px 24px rgba(17, 24, 39, 0.07);
+        min-height: 96px;
+    }
+
+    .kpi-card .kpi-label {
+        color: var(--muted);
+        font-size: 0.86rem;
+        font-weight: 700;
+        margin-bottom: 0.4rem;
+    }
+
+    .kpi-card .kpi-value {
+        color: var(--ink);
+        font-size: 2rem;
+        line-height: 1;
+        font-weight: 750;
+    }
+
+    .kpi-card.time {
+        border-left-color: var(--blue);
+    }
+
+    .kpi-card.workday {
+        border-left-color: var(--accent);
+    }
+
+    div[data-testid="stDataFrame"] {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 10px 24px rgba(17, 24, 39, 0.07);
+    }
+
+    div[data-testid="stTabs"] button {
+        color: var(--muted);
+        font-weight: 700;
+    }
+
+    div[data-testid="stTabs"] button[aria-selected="true"] {
+        color: var(--primary-dark);
+    }
+
+    div[data-testid="stDownloadButton"] button {
+        border-radius: 8px;
+        border: 1px solid var(--primary);
+        background: var(--primary);
+        color: white;
+        font-weight: 750;
+        min-height: 46px;
+    }
+
+    div[data-testid="stDownloadButton"] button:hover {
+        border-color: var(--primary-dark);
+        background: var(--primary-dark);
+        color: white;
+    }
+
+    .schedule-card {
+        border: 1px solid var(--line);
+        border-left: 5px solid var(--primary);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 0.85rem;
+        background: var(--surface);
+        box-shadow: 0 10px 24px rgba(17, 24, 39, 0.07);
+    }
+
+    .schedule-card strong {
+        display: block;
+        color: var(--ink);
+        font-size: 1.03rem;
+        line-height: 1.25;
+        margin-bottom: 0.25rem;
+    }
+
+    .schedule-card span {
+        color: var(--muted);
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+
+    .pause-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.45rem;
+        margin-top: 0.7rem;
+    }
+
+    .pause-pill {
+        background: var(--surface-soft);
+        border: 1px solid var(--line);
+        border-left: 4px solid var(--primary);
+        border-radius: 8px;
+        padding: 0.55rem 0.65rem;
+        font-size: 0.86rem;
+        color: var(--ink);
+        font-weight: 650;
+    }
+
+    .pause-pill.p1 {
+        background: #f8fafc;
+        border-left-color: var(--blue);
+    }
+
+    .pause-pill.p20 {
+        background: #fffaf0;
+        border-left-color: var(--accent);
+    }
+
+    .pause-pill.p2 {
+        background: #f7fdf9;
+        border-left-color: var(--success);
+    }
+
+    .pause-pill.supervisor {
+        background: #f8fafc;
+        border-left-color: var(--primary);
+    }
+
+    @media (max-width: 700px) {
+        .block-container {
+            padding-left: 0.75rem;
+            padding-right: 0.75rem;
+        }
+
+        h1 {
+            font-size: 1.55rem;
+        }
+
+        .pause-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .kpi-card {
+            padding: 0.8rem;
+            min-height: 86px;
+        }
+
+        .kpi-card .kpi-value {
+            font-size: 1.7rem;
+        }
+
+        div[data-baseweb="select"] > div {
+            min-height: 44px;
+        }
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+
+def read_csv_with_fallback(source) -> pd.DataFrame:
+    for encoding in ("utf-8-sig", "utf-8", "cp1252", "latin1"):
+        try:
+            if hasattr(source, "seek"):
+                source.seek(0)
+            return pd.read_csv(source, encoding=encoding)
+        except UnicodeDecodeError:
+            continue
+    raise ValueError("Não foi possível ler o arquivo CSV com uma codificação conhecida.")
+
+
+@st.cache_data(show_spinner=False)
+def load_default_data(csv_mtime: float) -> pd.DataFrame:
+    _ = csv_mtime
+    return read_csv_with_fallback(DEFAULT_CSV)
+
+
+def normalize_data(df: pd.DataFrame) -> pd.DataFrame:
+    normalized = df.copy()
+    normalized.columns = [column.strip().upper() for column in normalized.columns]
+
+    required = {"NOME", "SUPERVISOR", "STATUS", "HORÁRIO"}
+    missing = sorted(required - set(normalized.columns))
+    if missing:
+        missing_text = ", ".join(missing)
+        raise ValueError(f"O arquivo precisa ter estas colunas: {missing_text}.")
+
+    for column in ("NOME", "SUPERVISOR", "STATUS", "HORÁRIO"):
+        normalized[column] = normalized[column].fillna("").astype(str).str.strip()
+
+    normalized["SUPERVISOR"] = normalized["SUPERVISOR"].str.upper()
+    normalized["STATUS"] = normalized["STATUS"].str.upper()
+    normalized = normalized[normalized["STATUS"].eq("ATIVO")].copy()
+    normalized = normalized[normalized["SUPERVISOR"].isin(TARGET_SUPERVISORS)].copy()
+
+    normalized["HORÁRIO_ORDENACAO"] = pd.to_datetime(
+        normalized["HORÁRIO"], format="%H:%M", errors="coerce"
+    )
+    normalized = normalized.dropna(subset=["HORÁRIO_ORDENACAO"])
+    normalized = normalized.sort_values(["SUPERVISOR", "HORÁRIO_ORDENACAO", "NOME"])
+    return normalized
+
+
+def parse_clock(value: str) -> datetime:
+    return datetime.strptime(value.strip(), "%H:%M")
+
+
+def format_clock(moment: datetime) -> str:
+    return moment.strftime("%H:%M")
+
+
+def interval(start: datetime, duration_minutes: int) -> str:
+    end = start + timedelta(minutes=duration_minutes)
+    return f"{format_clock(start)} - {format_clock(end)}"
+
+
+def build_schedule(
+    df: pd.DataFrame,
+    pause_1_offset: int,
+    meal_offset: int,
+    pause_2_offset: int,
+) -> pd.DataFrame:
+    rows = []
+
+    for _, row in df.iterrows():
+        start = parse_clock(row["HORÁRIO"])
+        pause_1_start = start + timedelta(minutes=pause_1_offset)
+        meal_start = start + timedelta(minutes=meal_offset)
+        pause_2_start = start + timedelta(minutes=pause_2_offset)
+        end = start + timedelta(minutes=WORKDAY_MINUTES)
+
+        rows.append(
+            {
+                "Colaborador": row["NOME"].title(),
+                "Supervisor": TARGET_SUPERVISORS.get(row["SUPERVISOR"], row["SUPERVISOR"].title()),
+                "Entrada": format_clock(start),
+                "Pausa 1 (10 min)": interval(pause_1_start, 10),
+                "Pausa 20 min": interval(meal_start, 20),
+                "Pausa 2 (10 min)": interval(pause_2_start, 10),
+                "Saída": format_clock(end),
+            }
+        )
+
+    schedule = pd.DataFrame(rows)
+    if schedule.empty:
+        return schedule
+
+    schedule["__entrada_ordem"] = pd.to_datetime(
+        schedule["Entrada"], format="%H:%M", errors="coerce"
+    )
+    schedule = schedule.sort_values(["__entrada_ordem", "Colaborador"]).drop(
+        columns=["__entrada_ordem"]
+    )
+    return schedule.reset_index(drop=True)
+
+
+def render_mobile_cards(schedule: pd.DataFrame) -> None:
+    for _, row in schedule.iterrows():
+        st.markdown(
+            f"""
+            <div class="schedule-card">
+                <strong>{row["Colaborador"]}</strong>
+                <span>Entrada {row["Entrada"]} · Saída {row["Saída"]}</span>
+                <div class="pause-grid">
+                    <div class="pause-pill p1">Pausa 1: {row["Pausa 1 (10 min)"]}</div>
+                    <div class="pause-pill p20">Pausa 20: {row["Pausa 20 min"]}</div>
+                    <div class="pause-pill p2">Pausa 2: {row["Pausa 2 (10 min)"]}</div>
+                    <div class="pause-pill supervisor">Supervisora: {row["Supervisor"]}</div>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+
+def style_schedule_table(df: pd.DataFrame):
+    return (
+        df.style.set_table_styles(
+            [
+                {
+                    "selector": "thead th",
+                    "props": [
+                        ("background-color", "#f6f8fa"),
+                        ("color", "#111827"),
+                        ("font-weight", "700"),
+                        ("border-color", "#d9e0e7"),
+                    ],
+                },
+                {
+                    "selector": "tbody td",
+                    "props": [
+                        ("border-color", "#d3d9d2"),
+                    ],
+                },
+            ]
+        )
+        .set_properties(
+            subset=["Pausa 1 (10 min)"],
+            **{"background-color": "#f8fafc", "font-weight": "650"},
+        )
+        .set_properties(
+            subset=["Pausa 20 min"],
+            **{"background-color": "#fffaf0", "font-weight": "650"},
+        )
+        .set_properties(
+            subset=["Pausa 2 (10 min)"],
+            **{"background-color": "#f7fdf9", "font-weight": "650"},
+        )
+    )
+
+
+def render_kpi(label: str, value: str | int, variant: str = "") -> None:
+    st.markdown(
+        f"""
+        <div class="kpi-card {variant}">
+            <div class="kpi-label">{label}</div>
+            <div class="kpi-value">{value}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+st.markdown(
+    """
+    <section class="app-hero">
+        <h1>Controle de Pausas</h1>
+        <p>Escala de pausas por supervisora, com leitura rápida para celular e exportação quando precisar fechar a operação.</p>
+    </section>
+    """,
+    unsafe_allow_html=True,
+)
+
+with st.expander("Atualizar base de colaboradores", expanded=False):
+    uploaded_file = st.file_uploader(
+        "Enviar CSV atualizado",
+        type=["csv"],
+        help="Use um arquivo com as colunas NOME, SUPERVISOR, STATUS e HORÁRIO.",
+    )
+
+try:
+    if uploaded_file is not None:
+        raw_data = read_csv_with_fallback(uploaded_file)
+    elif DEFAULT_CSV.exists():
+        raw_data = load_default_data(DEFAULT_CSV.stat().st_mtime)
+    else:
+        st.info("Envie um CSV para começar.")
+        st.stop()
+
+    data = normalize_data(raw_data)
+except Exception as error:
+    st.error(str(error))
+    st.stop()
+
+supervisor_options = sorted(
+    data["SUPERVISOR"].unique(),
+    key=lambda value: SUPERVISOR_ORDER.get(value, 99),
+)
+supervisor_labels = [TARGET_SUPERVISORS.get(value, value.title()) for value in supervisor_options]
+label_to_supervisor = dict(zip(supervisor_labels, supervisor_options))
+
+filter_col_1, filter_col_2 = st.columns([1.2, 1])
+selected_labels = filter_col_1.multiselect(
+    "Supervisora",
+    supervisor_labels,
+    default=supervisor_labels,
+    help="Marque uma ou mais opções para visualizar.",
+)
+selected_supervisors = [label_to_supervisor[label] for label in selected_labels]
+
+if not selected_supervisors:
+    st.info("Selecione pelo menos uma supervisora para visualizar a escala.")
+    st.stop()
+
+supervisor_data = data[data["SUPERVISOR"].isin(selected_supervisors)].copy()
+time_options = ["Todos"] + sorted(supervisor_data["HORÁRIO"].unique(), key=lambda value: parse_clock(value))
+selected_time = filter_col_2.selectbox("Horário de entrada", time_options)
+
+if selected_time != "Todos":
+    supervisor_data = supervisor_data[supervisor_data["HORÁRIO"].eq(selected_time)]
+
+schedule = build_schedule(
+    supervisor_data,
+    PAUSE_1_OFFSET,
+    MEAL_OFFSET,
+    PAUSE_2_OFFSET,
+)
+
+metric_col_1, metric_col_2, metric_col_3 = st.columns(3)
+with metric_col_1:
+    render_kpi("Colaboradores", len(schedule))
+with metric_col_2:
+    render_kpi("Horários", supervisor_data["HORÁRIO"].nunique(), "time")
+with metric_col_3:
+    render_kpi("Jornada", "6h20", "workday")
+
+st.subheader("Escala de pausas")
+
+if schedule.empty:
+    st.info("Nenhum colaborador encontrado para os filtros selecionados.")
+else:
+    card_tab, table_tab = st.tabs(["Cartões", "Tabela"])
+    with card_tab:
+        render_mobile_cards(schedule)
+    with table_tab:
+        st.dataframe(style_schedule_table(schedule), hide_index=True, use_container_width=True)
