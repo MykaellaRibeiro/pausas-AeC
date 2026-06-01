@@ -1,4 +1,5 @@
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
+import sqlite3
 from pathlib import Path
 
 import pandas as pd
@@ -7,6 +8,7 @@ import streamlit as st
 
 APP_DIR = Path(__file__).parent
 DEFAULT_CSV = APP_DIR / "data" / "colaboradores.csv"
+DB_PATH = APP_DIR / "data" / "faltas.db"
 TARGET_SUPERVISORS = {
     "DANYELLA LAYSE SILVA TAVARES": "Danyella",
     "OLÍVIA LETÍCIA GOMES VIANA": "Olívia",
@@ -46,6 +48,8 @@ st.markdown(
         --accent: #d97706;
         --blue: #2563eb;
         --success: #15803d;
+        --danger: #dc2626;
+        --danger-soft: #fff1f2;
     }
 
     .stApp {
@@ -154,6 +158,10 @@ st.markdown(
         border-left-color: var(--accent);
     }
 
+    .kpi-card.absences {
+        border-left-color: var(--danger);
+    }
+
     div[data-testid="stDataFrame"] {
         border: 1px solid var(--line);
         border-radius: 8px;
@@ -193,6 +201,57 @@ st.markdown(
         margin-bottom: 0.85rem;
         background: var(--surface);
         box-shadow: 0 10px 24px rgba(17, 24, 39, 0.07);
+    }
+
+    .schedule-card.absent {
+        border-left-color: var(--danger);
+        background: var(--danger-soft);
+    }
+
+    .absence-badge {
+        display: inline-block;
+        margin-top: 0.55rem;
+        padding: 0.28rem 0.5rem;
+        border-radius: 8px;
+        background: var(--danger);
+        color: white;
+        font-size: 0.78rem;
+        font-weight: 750;
+    }
+
+    .absence-summary {
+        border: 1px solid #fecaca;
+        border-left: 5px solid var(--danger);
+        border-radius: 8px;
+        background: var(--danger-soft);
+        color: #7f1d1d;
+        font-weight: 700;
+        padding: 0.85rem 1rem;
+        margin: 0.85rem 0 1rem 0;
+    }
+
+    .history-item {
+        border: 1px solid var(--line);
+        border-left: 4px solid var(--danger);
+        border-radius: 8px;
+        background: var(--surface);
+        padding: 0.75rem 0.9rem;
+        min-height: 74px;
+        box-shadow: 0 6px 14px rgba(17, 24, 39, 0.05);
+    }
+
+    .history-person {
+        color: var(--ink);
+        font-weight: 780;
+        line-height: 1.25;
+        margin-bottom: 0.35rem;
+    }
+
+    .history-meta {
+        color: var(--muted);
+        font-size: 0.86rem;
+        font-weight: 620;
+        line-height: 1.45;
     }
 
     .schedule-card strong {
@@ -270,6 +329,10 @@ st.markdown(
             font-size: 1.7rem;
         }
 
+        .history-item {
+            min-height: auto;
+        }
+
         div[data-baseweb="select"] > div {
             min-height: 44px;
         }
@@ -336,6 +399,89 @@ def interval(start: datetime, duration_minutes: int) -> str:
     return f"{format_clock(start)} - {format_clock(end)}"
 
 
+def init_db() -> None:
+    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS faltas (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                data TEXT NOT NULL,
+                colaborador TEXT NOT NULL,
+                supervisor TEXT NOT NULL,
+                registrado_em TEXT NOT NULL,
+                UNIQUE(data, colaborador)
+            )
+            """
+        )
+
+
+def load_absences(absence_date: date) -> list[str]:
+    with sqlite3.connect(DB_PATH) as conn:
+        rows = conn.execute(
+            "SELECT colaborador FROM faltas WHERE data = ? ORDER BY colaborador",
+            (absence_date.isoformat(),),
+        ).fetchall()
+    return [row[0] for row in rows]
+
+
+def save_absences(absence_date: date, selected_rows: pd.DataFrame) -> None:
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute("DELETE FROM faltas WHERE data = ?", (absence_date.isoformat(),))
+        conn.executemany(
+            """
+            INSERT INTO faltas (data, colaborador, supervisor, registrado_em)
+            VALUES (?, ?, ?, ?)
+            """,
+            [
+                (
+                    absence_date.isoformat(),
+                    row["Colaborador"],
+                    row["Supervisor"],
+                    datetime.now().isoformat(timespec="seconds"),
+                )
+                for _, row in selected_rows.iterrows()
+            ],
+        )
+
+
+def delete_absences(records: list[tuple[str, str]]) -> None:
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.executemany(
+            "DELETE FROM faltas WHERE data = ? AND colaborador = ?",
+            records,
+        )
+
+
+def load_absence_history() -> pd.DataFrame:
+    with sqlite3.connect(DB_PATH) as conn:
+        history = pd.read_sql_query(
+            """
+            SELECT data, colaborador, supervisor, registrado_em
+            FROM faltas
+            ORDER BY data DESC, colaborador
+            """,
+            conn,
+        )
+
+    if history.empty:
+        return history
+
+    history["Data ISO"] = history["data"]
+    history["Data"] = pd.to_datetime(history["data"]).dt.strftime("%d/%m/%Y")
+    history["registrado_em"] = pd.to_datetime(history["registrado_em"]).dt.strftime(
+        "%d/%m/%Y %H:%M"
+    )
+    history = history.rename(
+        columns={
+            "colaborador": "Colaborador",
+            "supervisor": "Supervisor",
+            "registrado_em": "Registrado em",
+        }
+    )
+    return history[["Data ISO", "Data", "Colaborador", "Supervisor", "Registrado em"]]
+
+
 def build_schedule(
     df: pd.DataFrame,
     pause_1_offset: int,
@@ -376,26 +522,36 @@ def build_schedule(
     return schedule.reset_index(drop=True)
 
 
-def render_mobile_cards(schedule: pd.DataFrame) -> None:
+def render_mobile_cards(schedule: pd.DataFrame, absent_names: set[str]) -> None:
     for _, row in schedule.iterrows():
+        is_absent = row["Colaborador"] in absent_names
+        absent_class = " absent" if is_absent else ""
+        absent_badge = '<div class="absence-badge">Faltou</div>' if is_absent else ""
         st.markdown(
-            f"""
-            <div class="schedule-card">
-                <strong>{row["Colaborador"]}</strong>
-                <span>Entrada {row["Entrada"]} · Saída {row["Saída"]}</span>
-                <div class="pause-grid">
-                    <div class="pause-pill p1">Pausa 1: {row["Pausa 1 (10 min)"]}</div>
-                    <div class="pause-pill p20">Pausa 20: {row["Pausa 20 min"]}</div>
-                    <div class="pause-pill p2">Pausa 2: {row["Pausa 2 (10 min)"]}</div>
-                    <div class="pause-pill supervisor">Supervisora: {row["Supervisor"]}</div>
-                </div>
-            </div>
-            """,
+            f"""<div class="schedule-card{absent_class}">
+<strong>{row["Colaborador"]}</strong>
+<span>Entrada {row["Entrada"]} · Saída {row["Saída"]}</span>
+{absent_badge}
+<div class="pause-grid">
+<div class="pause-pill p1">Pausa 1: {row["Pausa 1 (10 min)"]}</div>
+<div class="pause-pill p20">Pausa 20: {row["Pausa 20 min"]}</div>
+<div class="pause-pill p2">Pausa 2: {row["Pausa 2 (10 min)"]}</div>
+<div class="pause-pill supervisor">Supervisora: {row["Supervisor"]}</div>
+</div>
+</div>""",
             unsafe_allow_html=True,
         )
 
 
-def style_schedule_table(df: pd.DataFrame):
+def style_schedule_table(df: pd.DataFrame, absent_names: set[str]):
+    def mark_absent_rows(row: pd.Series) -> list[str]:
+        if row["Colaborador"] in absent_names:
+            return [
+                "background-color: #fff1f2; color: #7f1d1d; font-weight: 700;"
+                for _ in row
+            ]
+        return ["" for _ in row]
+
     return (
         df.style.set_table_styles(
             [
@@ -428,6 +584,7 @@ def style_schedule_table(df: pd.DataFrame):
             subset=["Pausa 2 (10 min)"],
             **{"background-color": "#f7fdf9", "font-weight": "650"},
         )
+        .apply(mark_absent_rows, axis=1)
     )
 
 
@@ -443,11 +600,38 @@ def render_kpi(label: str, value: str | int, variant: str = "") -> None:
     )
 
 
+def render_history_rows(df: pd.DataFrame, key_prefix: str) -> None:
+    if df.empty:
+        return
+
+    for index, row in df.reset_index(drop=True).iterrows():
+        info_col, action_col = st.columns([0.92, 0.08], vertical_alignment="center")
+        with info_col:
+            st.markdown(
+                f"""<div class="history-item">
+<div class="history-person">{row["Colaborador"]}</div>
+<div class="history-meta">{row["Data"]} · {row["Supervisor"]} · registrado em {row["Registrado em"]}</div>
+</div>""",
+                unsafe_allow_html=True,
+            )
+        with action_col:
+            if st.button(
+                "",
+                key=f"{key_prefix}_delete_{index}_{row['Data ISO']}_{row['Colaborador']}",
+                help=f"Apagar falta de {row['Colaborador']} em {row['Data']}",
+                icon=":material/delete:",
+                use_container_width=True,
+            ):
+                delete_absences([(row["Data ISO"], row["Colaborador"])])
+                st.success("Falta apagada com sucesso.")
+                st.rerun()
+
+
 st.markdown(
     """
     <section class="app-hero">
         <h1>Controle de Pausas</h1>
-        <p>Escala de pausas por supervisora, com leitura rápida para celular e exportação quando precisar fechar a operação.</p>
+        <p>Escala de pausas por supervisora, controle de faltas por data e histórico para acompanhar a operação.</p>
     </section>
     """,
     unsafe_allow_html=True,
@@ -473,6 +657,8 @@ try:
 except Exception as error:
     st.error(str(error))
     st.stop()
+
+init_db()
 
 supervisor_options = sorted(
     data["SUPERVISOR"].unique(),
@@ -508,13 +694,63 @@ schedule = build_schedule(
     PAUSE_2_OFFSET,
 )
 
-metric_col_1, metric_col_2, metric_col_3 = st.columns(3)
+date_col, absence_col = st.columns([0.85, 1.6])
+selected_date = date_col.date_input(
+    "Data da escala",
+    value=date.today(),
+    format="DD/MM/YYYY",
+    key="schedule_date",
+)
+formatted_date = selected_date.strftime("%d/%m/%Y")
+
+absence_options = sorted(schedule["Colaborador"].tolist()) if not schedule.empty else []
+saved_absences = [
+    collaborator
+    for collaborator in load_absences(selected_date)
+    if collaborator in absence_options
+]
+absent_collaborators = absence_col.multiselect(
+    "Colaboradores que faltaram",
+    absence_options,
+    default=saved_absences,
+    placeholder="Selecione um ou mais colaboradores",
+)
+absent_names = set(absent_collaborators)
+
+selected_absence_rows = schedule[schedule["Colaborador"].isin(absent_names)].copy()
+save_col, status_col = st.columns([0.35, 1])
+if save_col.button("Salvar faltas", use_container_width=True):
+    save_absences(selected_date, selected_absence_rows)
+    status_col.success(f"Faltas de {formatted_date} salvas com sucesso.")
+
+if absent_names:
+    st.markdown(
+        f"""
+        <div class="absence-summary">
+            {len(absent_names)} colaborador(es) faltaram em {formatted_date}.
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+else:
+    st.markdown(
+        f"""
+        <div class="absence-summary">
+            Nenhuma falta registrada em {formatted_date}.
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+metric_col_1, metric_col_2, metric_col_3, metric_col_4 = st.columns(4)
 with metric_col_1:
     render_kpi("Colaboradores", len(schedule))
 with metric_col_2:
     render_kpi("Horários", supervisor_data["HORÁRIO"].nunique(), "time")
 with metric_col_3:
     render_kpi("Jornada", "6h20", "workday")
+with metric_col_4:
+    render_kpi("Faltas no dia", len(absent_names), "absences")
 
 st.subheader("Escala de pausas")
 
@@ -523,6 +759,58 @@ if schedule.empty:
 else:
     card_tab, table_tab = st.tabs(["Cartões", "Tabela"])
     with card_tab:
-        render_mobile_cards(schedule)
+        render_mobile_cards(schedule, absent_names)
     with table_tab:
-        st.dataframe(style_schedule_table(schedule), hide_index=True, use_container_width=True)
+        st.dataframe(
+            style_schedule_table(schedule, absent_names),
+            hide_index=True,
+            use_container_width=True,
+        )
+
+st.subheader("Histórico de faltas")
+history = load_absence_history()
+
+if history.empty:
+    st.info("Nenhuma falta salva no histórico ainda.")
+else:
+    history_by_period_tab, history_by_collaborator_tab = st.tabs(
+        ["Relatório por período", "Relatório por colaborador"]
+    )
+
+    with history_by_period_tab:
+        history_dates = pd.to_datetime(history["Data ISO"]).dt.date
+        min_history_date = history_dates.min()
+        max_history_date = history_dates.max()
+        period_col_1, period_col_2 = st.columns(2)
+        start_date = period_col_1.date_input(
+            "Data inicial",
+            value=min_history_date,
+            format="DD/MM/YYYY",
+            key="history_start_date",
+        )
+        end_date = period_col_2.date_input(
+            "Data final",
+            value=max_history_date,
+            format="DD/MM/YYYY",
+            key="history_end_date",
+        )
+
+        if start_date > end_date:
+            st.warning("A data inicial precisa ser menor ou igual à data final.")
+        else:
+            period_history = history[
+                pd.to_datetime(history["Data ISO"]).dt.date.between(start_date, end_date)
+            ].copy()
+            render_kpi("Faltas no período", len(period_history), "absences")
+
+            if period_history.empty:
+                st.info("Nenhuma falta encontrada nesse período.")
+            else:
+                render_history_rows(period_history, "period")
+
+    with history_by_collaborator_tab:
+        collaborators = sorted(history["Colaborador"].unique())
+        selected_collaborator = st.selectbox("Colaborador", collaborators)
+        collaborator_history = history[history["Colaborador"].eq(selected_collaborator)]
+        render_kpi("Faltas do colaborador", len(collaborator_history), "absences")
+        render_history_rows(collaborator_history, "collaborator")
