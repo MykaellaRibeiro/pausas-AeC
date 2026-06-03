@@ -399,6 +399,19 @@ def interval(start: datetime, duration_minutes: int) -> str:
     return f"{format_clock(start)} - {format_clock(end)}"
 
 
+def extract_interval_start(value: str) -> str:
+    return str(value).split("-")[0].strip()
+
+
+def safe_parse_clock(value: str, field_name: str, collaborator: str) -> datetime:
+    try:
+        return parse_clock(str(value))
+    except ValueError:
+        raise ValueError(
+            f"Horário inválido em {field_name} de {collaborator}. Use o formato HH:MM."
+        )
+
+
 def init_db() -> None:
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     with sqlite3.connect(DB_PATH) as conn:
@@ -520,6 +533,80 @@ def build_schedule(
         columns=["__entrada_ordem"]
     )
     return schedule.reset_index(drop=True)
+
+
+def prepare_editable_schedule(schedule: pd.DataFrame) -> pd.DataFrame:
+    if schedule.empty:
+        return schedule
+
+    editable = schedule[
+        [
+            "Colaborador",
+            "Supervisor",
+            "Entrada",
+            "Pausa 1 (10 min)",
+            "Pausa 20 min",
+            "Pausa 2 (10 min)",
+        ]
+    ].copy()
+    editable["Pausa 1 início"] = editable["Pausa 1 (10 min)"].apply(extract_interval_start)
+    editable["Pausa 20 início"] = editable["Pausa 20 min"].apply(extract_interval_start)
+    editable["Pausa 2 início"] = editable["Pausa 2 (10 min)"].apply(extract_interval_start)
+    return editable[
+        [
+            "Colaborador",
+            "Supervisor",
+            "Entrada",
+            "Pausa 1 início",
+            "Pausa 20 início",
+            "Pausa 2 início",
+        ]
+    ]
+
+
+def calculate_adjusted_schedule(
+    editable: pd.DataFrame,
+    auto_pauses: bool,
+) -> pd.DataFrame:
+    rows = []
+
+    for _, row in editable.iterrows():
+        collaborator = row["Colaborador"]
+        start = safe_parse_clock(row["Entrada"], "entrada", collaborator)
+
+        if auto_pauses:
+            pause_1_start = start + timedelta(minutes=PAUSE_1_OFFSET)
+            meal_start = start + timedelta(minutes=MEAL_OFFSET)
+            pause_2_start = start + timedelta(minutes=PAUSE_2_OFFSET)
+        else:
+            pause_1_start = safe_parse_clock(row["Pausa 1 início"], "pausa 1", collaborator)
+            meal_start = safe_parse_clock(row["Pausa 20 início"], "pausa de 20", collaborator)
+            pause_2_start = safe_parse_clock(row["Pausa 2 início"], "pausa 2", collaborator)
+
+        end = start + timedelta(minutes=WORKDAY_MINUTES)
+        rows.append(
+            {
+                "Colaborador": collaborator,
+                "Supervisor": row["Supervisor"],
+                "Entrada": format_clock(start),
+                "Pausa 1 (10 min)": interval(pause_1_start, 10),
+                "Pausa 20 min": interval(meal_start, 20),
+                "Pausa 2 (10 min)": interval(pause_2_start, 10),
+                "Saída": format_clock(end),
+            }
+        )
+
+    adjusted = pd.DataFrame(rows)
+    if adjusted.empty:
+        return adjusted
+
+    adjusted["__entrada_ordem"] = pd.to_datetime(
+        adjusted["Entrada"], format="%H:%M", errors="coerce"
+    )
+    adjusted = adjusted.sort_values(["__entrada_ordem", "Colaborador"]).drop(
+        columns=["__entrada_ordem"]
+    )
+    return adjusted.reset_index(drop=True)
 
 
 def render_mobile_cards(schedule: pd.DataFrame, absent_names: set[str]) -> None:
@@ -693,6 +780,53 @@ schedule = build_schedule(
     MEAL_OFFSET,
     PAUSE_2_OFFSET,
 )
+
+with st.expander("Ajustar horários do dia", expanded=False):
+    if schedule.empty:
+        st.info("Nenhum colaborador disponível para ajuste nos filtros atuais.")
+    else:
+        adjustment_mode = st.radio(
+            "Como calcular as pausas?",
+            ["Automático pela entrada", "Editar pausas manualmente"],
+            horizontal=True,
+            help=(
+                "Use automático para atrasos na chegada. Use manual quando a pausa saiu "
+                "em outro horário, por exemplo por ligação."
+            ),
+        )
+        auto_pauses = adjustment_mode == "Automático pela entrada"
+        editable_schedule = prepare_editable_schedule(schedule)
+
+        if auto_pauses:
+            editor_data = editable_schedule[["Colaborador", "Supervisor", "Entrada"]].copy()
+            disabled_columns = ["Colaborador", "Supervisor"]
+        else:
+            editor_data = editable_schedule.copy()
+            disabled_columns = ["Colaborador", "Supervisor"]
+
+        editor_key = f"schedule_editor_{abs(hash((tuple(selected_labels), selected_time, adjustment_mode)))}"
+        edited_schedule = st.data_editor(
+            editor_data,
+            hide_index=True,
+            use_container_width=True,
+            disabled=disabled_columns,
+            key=editor_key,
+            column_config={
+                "Entrada": st.column_config.TextColumn(
+                    "Entrada",
+                    help="Use HH:MM. A saída será entrada + 6h20.",
+                ),
+                "Pausa 1 início": st.column_config.TextColumn("Pausa 1 início"),
+                "Pausa 20 início": st.column_config.TextColumn("Pausa 20 início"),
+                "Pausa 2 início": st.column_config.TextColumn("Pausa 2 início"),
+            },
+        )
+
+        try:
+            schedule = calculate_adjusted_schedule(edited_schedule, auto_pauses)
+        except ValueError as error:
+            st.error(str(error))
+            st.stop()
 
 date_col, absence_col = st.columns([0.85, 1.6])
 selected_date = date_col.date_input(
