@@ -427,6 +427,22 @@ def init_db() -> None:
             )
             """
         )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS ajustes_horarios (
+                data TEXT NOT NULL,
+                colaborador TEXT NOT NULL,
+                supervisor TEXT NOT NULL,
+                entrada TEXT NOT NULL,
+                pausa_1_inicio TEXT NOT NULL,
+                pausa_20_inicio TEXT NOT NULL,
+                pausa_2_inicio TEXT NOT NULL,
+                modo TEXT NOT NULL,
+                atualizado_em TEXT NOT NULL,
+                PRIMARY KEY (data, colaborador)
+            )
+            """
+        )
 
 
 def load_absences(absence_date: date) -> list[str]:
@@ -464,6 +480,73 @@ def delete_absences(records: list[tuple[str, str]]) -> None:
             "DELETE FROM faltas WHERE data = ? AND colaborador = ?",
             records,
         )
+
+
+def load_time_adjustments(adjustment_date: date) -> pd.DataFrame:
+    with sqlite3.connect(DB_PATH) as conn:
+        adjustments = pd.read_sql_query(
+            """
+            SELECT colaborador, supervisor, entrada, pausa_1_inicio, pausa_20_inicio,
+                   pausa_2_inicio, modo
+            FROM ajustes_horarios
+            WHERE data = ?
+            ORDER BY colaborador
+            """,
+            conn,
+            params=(adjustment_date.isoformat(),),
+        )
+    return adjustments
+
+
+def save_time_adjustments(
+    adjustment_date: date,
+    edited_rows: pd.DataFrame,
+    mode: str,
+) -> None:
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.executemany(
+            """
+            INSERT OR REPLACE INTO ajustes_horarios (
+                data, colaborador, supervisor, entrada, pausa_1_inicio,
+                pausa_20_inicio, pausa_2_inicio, modo, atualizado_em
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            [
+                (
+                    adjustment_date.isoformat(),
+                    row["Colaborador"],
+                    row["Supervisor"],
+                    row["Entrada"],
+                    row["Pausa 1 início"],
+                    row["Pausa 20 início"],
+                    row["Pausa 2 início"],
+                    mode,
+                    datetime.now().isoformat(timespec="seconds"),
+                )
+                for _, row in edited_rows.iterrows()
+            ],
+        )
+
+
+def apply_time_adjustments(editable: pd.DataFrame, adjustment_date: date) -> pd.DataFrame:
+    adjustments = load_time_adjustments(adjustment_date)
+    if adjustments.empty or editable.empty:
+        return editable
+
+    adjusted = editable.copy()
+    adjustment_map = adjustments.set_index("colaborador").to_dict("index")
+    for index, row in adjusted.iterrows():
+        saved = adjustment_map.get(row["Colaborador"])
+        if not saved:
+            continue
+
+        adjusted.at[index, "Entrada"] = saved["entrada"]
+        adjusted.at[index, "Pausa 1 início"] = saved["pausa_1_inicio"]
+        adjusted.at[index, "Pausa 20 início"] = saved["pausa_20_inicio"]
+        adjusted.at[index, "Pausa 2 início"] = saved["pausa_2_inicio"]
+
+    return adjusted
 
 
 def load_absence_history() -> pd.DataFrame:
@@ -774,6 +857,15 @@ selected_time = filter_col_2.selectbox("Horário de entrada", time_options)
 if selected_time != "Todos":
     supervisor_data = supervisor_data[supervisor_data["HORÁRIO"].eq(selected_time)]
 
+date_col, absence_col = st.columns([0.85, 1.6])
+selected_date = date_col.date_input(
+    "Data da escala",
+    value=date.today(),
+    format="DD/MM/YYYY",
+    key="schedule_date",
+)
+formatted_date = selected_date.strftime("%d/%m/%Y")
+
 schedule = build_schedule(
     supervisor_data,
     PAUSE_1_OFFSET,
@@ -795,7 +887,10 @@ with st.expander("Ajustar horários do dia", expanded=False):
             ),
         )
         auto_pauses = adjustment_mode == "Automático pela entrada"
-        editable_schedule = prepare_editable_schedule(schedule)
+        editable_schedule = apply_time_adjustments(
+            prepare_editable_schedule(schedule),
+            selected_date,
+        )
 
         if auto_pauses:
             editor_data = editable_schedule[["Colaborador", "Supervisor", "Entrada"]].copy()
@@ -828,14 +923,17 @@ with st.expander("Ajustar horários do dia", expanded=False):
             st.error(str(error))
             st.stop()
 
-date_col, absence_col = st.columns([0.85, 1.6])
-selected_date = date_col.date_input(
-    "Data da escala",
-    value=date.today(),
-    format="DD/MM/YYYY",
-    key="schedule_date",
-)
-formatted_date = selected_date.strftime("%d/%m/%Y")
+        adjustment_rows_to_save = prepare_editable_schedule(schedule)
+        save_adjustment_col, save_adjustment_status_col = st.columns([0.35, 1])
+        if save_adjustment_col.button("Salvar ajustes", use_container_width=True):
+            save_time_adjustments(
+                selected_date,
+                adjustment_rows_to_save,
+                adjustment_mode,
+            )
+            save_adjustment_status_col.success(
+                f"Ajustes de horário de {formatted_date} salvos com sucesso."
+            )
 
 absence_options = sorted(schedule["Colaborador"].tolist()) if not schedule.empty else []
 saved_absences = [
