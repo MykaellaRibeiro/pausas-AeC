@@ -12,12 +12,70 @@ DB_PATH = APP_DIR / "data" / "faltas.db"
 TARGET_SUPERVISORS = {
     "DANYELLA LAYSE SILVA TAVARES": "Danyella",
     "OLÍVIA LETÍCIA GOMES VIANA": "Olívia",
-    "TROCA CASADA": "Troca casada",
 }
 SUPERVISOR_ORDER = {
     "DANYELLA LAYSE SILVA TAVARES": 1,
     "OLÍVIA LETÍCIA GOMES VIANA": 2,
-    "TROCA CASADA": 3,
+}
+ASSIGNED_SUPERVISORS = {
+    "GABRIELY SILVA DE OLIVEIRA": "OLÍVIA LETÍCIA GOMES VIANA",
+    "TATIANE EMANUELE RODRIGUES NUNES": "OLÍVIA LETÍCIA GOMES VIANA",
+    "MARIA DO CARMO DA SILVA": "OLÍVIA LETÍCIA GOMES VIANA",
+    "RWITIYIANA MARIA DOS SANTOS": "OLÍVIA LETÍCIA GOMES VIANA",
+    "HYAGO HENRIQUE DE OLIVEIRA PATRIOTA": "OLÍVIA LETÍCIA GOMES VIANA",
+    "INGRID IANARA VIEIRA SILVA": "OLÍVIA LETÍCIA GOMES VIANA",
+    "JULIANA BATISTA DA SILVA": "OLÍVIA LETÍCIA GOMES VIANA",
+    "RAYANE LIRA DA SILVA": "OLÍVIA LETÍCIA GOMES VIANA",
+    "MARIA PAULA DA SILVA": "OLÍVIA LETÍCIA GOMES VIANA",
+    "MARIA THAUANY SANTOS DA SILVA": "OLÍVIA LETÍCIA GOMES VIANA",
+    "WALLERYA GLLEYSIELLE FERREIRA DE BRITO": "OLÍVIA LETÍCIA GOMES VIANA",
+    "LEONARDO JOAO FERREIRA ARAUJO SILVA": "OLÍVIA LETÍCIA GOMES VIANA",
+    "EMANUELLY ALVES DOS SANTOS": "OLÍVIA LETÍCIA GOMES VIANA",
+    "ISMAELE DA SILVA NUNES": "OLÍVIA LETÍCIA GOMES VIANA",
+    "MAGALY GALVAO": "DANYELLA LAYSE SILVA TAVARES",
+    "RENATA RATTACASO DA SILVA": "DANYELLA LAYSE SILVA TAVARES",
+    "JOSE EDSON DA SILVA": "DANYELLA LAYSE SILVA TAVARES",
+    "WESLEY HENRIQUE TRAJANO DA SILVA": "DANYELLA LAYSE SILVA TAVARES",
+    "INGRYD SCAMPARINI DA SILVA NASCIMENTO": "DANYELLA LAYSE SILVA TAVARES",
+    "ANNE BEATRIZ DA SILVA LIMA": "DANYELLA LAYSE SILVA TAVARES",
+    "ANTHONY GULTHIERREZ JOANES SOARES SILVA": "DANYELLA LAYSE SILVA TAVARES",
+    "CAROLINA DE MELLO ARAUJO": "DANYELLA LAYSE SILVA TAVARES",
+    "GUILHERME ANTONIO DE OLIVEIRA SILVA": "DANYELLA LAYSE SILVA TAVARES",
+    "STEPHANE SABRYNA BEZERRA DA COSTA SILVA": "DANYELLA LAYSE SILVA TAVARES",
+    "DAVID ALDEMIR RODRIGUES DE LUCENA": "DANYELLA LAYSE SILVA TAVARES",
+    "MATHEUS VINICIUS MENDES DE LUNA": "DANYELLA LAYSE SILVA TAVARES",
+    "FRANCINEUZA SOUZA FERNANDES": "DANYELLA LAYSE SILVA TAVARES",
+    "LUANA BEATRIZ MENDONCA DOS SANTOS": "DANYELLA LAYSE SILVA TAVARES",
+}
+ASSIGNED_START_TIMES = {
+    "MAGALY GALVAO": "07:00",
+    "RENATA RATTACASO DA SILVA": "07:00",
+    "JOSE EDSON DA SILVA": "08:40",
+    "WESLEY HENRIQUE TRAJANO DA SILVA": "09:00",
+    "INGRYD SCAMPARINI DA SILVA NASCIMENTO": "09:30",
+    "ANNE BEATRIZ DA SILVA LIMA": "09:40",
+    "ANTHONY GULTHIERREZ JOANES SOARES SILVA": "10:00",
+    "CAROLINA DE MELLO ARAUJO": "10:20",
+    "GUILHERME ANTONIO DE OLIVEIRA SILVA": "10:00",
+    "STEPHANE SABRYNA BEZERRA DA COSTA SILVA": "10:20",
+    "DAVID ALDEMIR RODRIGUES DE LUCENA": "12:00",
+    "MATHEUS VINICIUS MENDES DE LUNA": "12:20",
+    "FRANCINEUZA SOUZA FERNANDES": "12:20",
+    "LUANA BEATRIZ MENDONCA DOS SANTOS": "13:00",
+    "GABRIELY SILVA DE OLIVEIRA": "07:00",
+    "TATIANE EMANUELE RODRIGUES NUNES": "07:00",
+    "MARIA DO CARMO DA SILVA": "07:00",
+    "RWITIYIANA MARIA DOS SANTOS": "07:00",
+    "HYAGO HENRIQUE DE OLIVEIRA PATRIOTA": "07:30",
+    "INGRID IANARA VIEIRA SILVA": "07:30",
+    "JULIANA BATISTA DA SILVA": "07:30",
+    "RAYANE LIRA DA SILVA": "07:50",
+    "MARIA PAULA DA SILVA": "08:00",
+    "MARIA THAUANY SANTOS DA SILVA": "08:20",
+    "WALLERYA GLLEYSIELLE FERREIRA DE BRITO": "08:20",
+    "LEONARDO JOAO FERREIRA ARAUJO SILVA": "08:30",
+    "EMANUELLY ALVES DOS SANTOS": "08:40",
+    "ISMAELE DA SILVA NUNES": "08:40",
 }
 WORKDAY_MINUTES = 6 * 60 + 20
 PAUSE_1_OFFSET = 90
@@ -306,6 +364,24 @@ st.markdown(
         border-left-color: var(--primary);
     }
 
+    .pause-pill.done {
+        background: #ecfdf3;
+        border-color: #bbf7d0;
+        border-left-color: var(--success);
+        color: #14532d;
+    }
+
+    .pause-checks {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.55rem;
+        margin: -0.25rem 0 0.9rem 0.35rem;
+    }
+
+    .pause-checks label {
+        font-weight: 700;
+    }
+
     @media (max-width: 700px) {
         .block-container {
             padding-left: 0.75rem;
@@ -317,6 +393,10 @@ st.markdown(
         }
 
         .pause-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .pause-checks {
             grid-template-columns: 1fr;
         }
 
@@ -376,6 +456,10 @@ def normalize_data(df: pd.DataFrame) -> pd.DataFrame:
     normalized["SUPERVISOR"] = normalized["SUPERVISOR"].str.upper()
     normalized["STATUS"] = normalized["STATUS"].str.upper()
     normalized = normalized[normalized["STATUS"].eq("ATIVO")].copy()
+    normalized["SUPERVISOR"] = normalized["NOME"].str.upper().map(ASSIGNED_SUPERVISORS)
+    normalized["HORÁRIO"] = normalized["NOME"].str.upper().map(ASSIGNED_START_TIMES)
+    normalized = normalized.dropna(subset=["SUPERVISOR"])
+    normalized = normalized.dropna(subset=["HORÁRIO"])
     normalized = normalized[normalized["SUPERVISOR"].isin(TARGET_SUPERVISORS)].copy()
 
     normalized["HORÁRIO_ORDENACAO"] = pd.to_datetime(
@@ -443,6 +527,18 @@ def init_db() -> None:
             )
             """
         )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS status_pausas (
+                data TEXT NOT NULL,
+                colaborador TEXT NOT NULL,
+                pausa TEXT NOT NULL,
+                feito INTEGER NOT NULL,
+                atualizado_em TEXT NOT NULL,
+                PRIMARY KEY (data, colaborador, pausa)
+            )
+            """
+        )
 
 
 def load_absences(absence_date: date) -> list[str]:
@@ -479,6 +575,43 @@ def delete_absences(records: list[tuple[str, str]]) -> None:
         conn.executemany(
             "DELETE FROM faltas WHERE data = ? AND colaborador = ?",
             records,
+        )
+
+
+def load_pause_status(status_date: date) -> set[tuple[str, str]]:
+    with sqlite3.connect(DB_PATH) as conn:
+        rows = conn.execute(
+            """
+            SELECT colaborador, pausa
+            FROM status_pausas
+            WHERE data = ? AND feito = 1
+            """,
+            (status_date.isoformat(),),
+        ).fetchall()
+    return {(row[0], row[1]) for row in rows}
+
+
+def save_pause_status(
+    status_date: date,
+    collaborator: str,
+    pause: str,
+    done: bool,
+) -> None:
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute(
+            """
+            INSERT OR REPLACE INTO status_pausas (
+                data, colaborador, pausa, feito, atualizado_em
+            )
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (
+                status_date.isoformat(),
+                collaborator,
+                pause,
+                int(done),
+                datetime.now().isoformat(timespec="seconds"),
+            ),
         )
 
 
@@ -692,28 +825,60 @@ def calculate_adjusted_schedule(
     return adjusted.reset_index(drop=True)
 
 
-def render_mobile_cards(schedule: pd.DataFrame, absent_names: set[str]) -> None:
+def render_mobile_cards(
+    schedule: pd.DataFrame,
+    absent_names: set[str],
+    pause_status: set[tuple[str, str]],
+    status_date: date,
+) -> None:
     for _, row in schedule.iterrows():
+        collaborator = row["Colaborador"]
         is_absent = row["Colaborador"] in absent_names
         absent_class = " absent" if is_absent else ""
         absent_badge = '<div class="absence-badge">Faltou</div>' if is_absent else ""
+        pause_1_done = (collaborator, "pausa_1") in pause_status
+        pause_20_done = (collaborator, "pausa_20") in pause_status
+        pause_2_done = (collaborator, "pausa_2") in pause_status
+        pause_1_class = " done" if pause_1_done else ""
+        pause_20_class = " done" if pause_20_done else ""
+        pause_2_class = " done" if pause_2_done else ""
         st.markdown(
             f"""<div class="schedule-card{absent_class}">
 <strong>{row["Colaborador"]}</strong>
 <span>Entrada {row["Entrada"]} · Saída {row["Saída"]}</span>
 {absent_badge}
 <div class="pause-grid">
-<div class="pause-pill p1">Pausa 1: {row["Pausa 1 (10 min)"]}</div>
-<div class="pause-pill p20">Pausa 20: {row["Pausa 20 min"]}</div>
-<div class="pause-pill p2">Pausa 2: {row["Pausa 2 (10 min)"]}</div>
+<div class="pause-pill p1{pause_1_class}">Pausa 1: {row["Pausa 1 (10 min)"]}</div>
+<div class="pause-pill p20{pause_20_class}">Pausa 20: {row["Pausa 20 min"]}</div>
+<div class="pause-pill p2{pause_2_class}">Pausa 2: {row["Pausa 2 (10 min)"]}</div>
 <div class="pause-pill supervisor">Supervisora: {row["Supervisor"]}</div>
 </div>
 </div>""",
             unsafe_allow_html=True,
         )
+        check_cols = st.columns(3)
+        pause_controls = [
+            ("pausa_1", "Pausa 1 OK", pause_1_done),
+            ("pausa_20", "Pausa 20 OK", pause_20_done),
+            ("pausa_2", "Pausa 2 OK", pause_2_done),
+        ]
+        for col, (pause_key, label, current_value) in zip(check_cols, pause_controls):
+            with col:
+                new_value = st.checkbox(
+                    label,
+                    value=current_value,
+                    key=f"pause_status_{status_date.isoformat()}_{collaborator}_{pause_key}",
+                )
+                if new_value != current_value:
+                    save_pause_status(status_date, collaborator, pause_key, new_value)
+                    st.rerun()
 
 
-def style_schedule_table(df: pd.DataFrame, absent_names: set[str]):
+def style_schedule_table(
+    df: pd.DataFrame,
+    absent_names: set[str],
+    pause_status: set[tuple[str, str]],
+):
     def mark_absent_rows(row: pd.Series) -> list[str]:
         if row["Colaborador"] in absent_names:
             return [
@@ -721,6 +886,21 @@ def style_schedule_table(df: pd.DataFrame, absent_names: set[str]):
                 for _ in row
             ]
         return ["" for _ in row]
+
+    def mark_done_pauses(row: pd.Series) -> list[str]:
+        styles = ["" for _ in row]
+        column_names = list(row.index)
+        pause_columns = {
+            "Pausa 1 (10 min)": "pausa_1",
+            "Pausa 20 min": "pausa_20",
+            "Pausa 2 (10 min)": "pausa_2",
+        }
+        for column_name, pause_key in pause_columns.items():
+            if (row["Colaborador"], pause_key) in pause_status and column_name in column_names:
+                styles[column_names.index(column_name)] = (
+                    "background-color: #ecfdf3; color: #14532d; font-weight: 800;"
+                )
+        return styles
 
     return (
         df.style.set_table_styles(
@@ -755,6 +935,7 @@ def style_schedule_table(df: pd.DataFrame, absent_names: set[str]):
             **{"background-color": "#f7fdf9", "font-weight": "650"},
         )
         .apply(mark_absent_rows, axis=1)
+        .apply(mark_done_pauses, axis=1)
     )
 
 
@@ -948,6 +1129,7 @@ absent_collaborators = absence_col.multiselect(
     placeholder="Selecione um ou mais colaboradores",
 )
 absent_names = set(absent_collaborators)
+pause_status = load_pause_status(selected_date)
 
 selected_absence_rows = schedule[schedule["Colaborador"].isin(absent_names)].copy()
 save_col, status_col = st.columns([0.35, 1])
@@ -991,10 +1173,10 @@ if schedule.empty:
 else:
     card_tab, table_tab = st.tabs(["Cartões", "Tabela"])
     with card_tab:
-        render_mobile_cards(schedule, absent_names)
+        render_mobile_cards(schedule, absent_names, pause_status, selected_date)
     with table_tab:
         st.dataframe(
-            style_schedule_table(schedule, absent_names),
+            style_schedule_table(schedule, absent_names, pause_status),
             hide_index=True,
             use_container_width=True,
         )
