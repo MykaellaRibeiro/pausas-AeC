@@ -17,66 +17,10 @@ SUPERVISOR_ORDER = {
     "DANYELLA LAYSE SILVA TAVARES": 1,
     "OLÍVIA LETÍCIA GOMES VIANA": 2,
 }
-ASSIGNED_SUPERVISORS = {
-    "GABRIELY SILVA DE OLIVEIRA": "OLÍVIA LETÍCIA GOMES VIANA",
-    "TATIANE EMANUELE RODRIGUES NUNES": "OLÍVIA LETÍCIA GOMES VIANA",
-    "MARIA DO CARMO DA SILVA": "OLÍVIA LETÍCIA GOMES VIANA",
-    "RWITIYIANA MARIA DOS SANTOS": "OLÍVIA LETÍCIA GOMES VIANA",
-    "HYAGO HENRIQUE DE OLIVEIRA PATRIOTA": "OLÍVIA LETÍCIA GOMES VIANA",
-    "INGRID IANARA VIEIRA SILVA": "OLÍVIA LETÍCIA GOMES VIANA",
-    "JULIANA BATISTA DA SILVA": "OLÍVIA LETÍCIA GOMES VIANA",
-    "RAYANE LIRA DA SILVA": "OLÍVIA LETÍCIA GOMES VIANA",
-    "MARIA PAULA DA SILVA": "OLÍVIA LETÍCIA GOMES VIANA",
-    "MARIA THAUANY SANTOS DA SILVA": "OLÍVIA LETÍCIA GOMES VIANA",
-    "WALLERYA GLLEYSIELLE FERREIRA DE BRITO": "OLÍVIA LETÍCIA GOMES VIANA",
-    "LEONARDO JOAO FERREIRA ARAUJO SILVA": "OLÍVIA LETÍCIA GOMES VIANA",
-    "EMANUELLY ALVES DOS SANTOS": "OLÍVIA LETÍCIA GOMES VIANA",
-    "ISMAELE DA SILVA NUNES": "OLÍVIA LETÍCIA GOMES VIANA",
-    "MAGALY GALVAO": "DANYELLA LAYSE SILVA TAVARES",
-    "RENATA RATTACASO DA SILVA": "DANYELLA LAYSE SILVA TAVARES",
-    "JOSE EDSON DA SILVA": "DANYELLA LAYSE SILVA TAVARES",
-    "WESLEY HENRIQUE TRAJANO DA SILVA": "DANYELLA LAYSE SILVA TAVARES",
-    "INGRYD SCAMPARINI DA SILVA NASCIMENTO": "DANYELLA LAYSE SILVA TAVARES",
-    "ANNE BEATRIZ DA SILVA LIMA": "DANYELLA LAYSE SILVA TAVARES",
-    "ANTHONY GULTHIERREZ JOANES SOARES SILVA": "DANYELLA LAYSE SILVA TAVARES",
-    "CAROLINA DE MELLO ARAUJO": "DANYELLA LAYSE SILVA TAVARES",
-    "GUILHERME ANTONIO DE OLIVEIRA SILVA": "DANYELLA LAYSE SILVA TAVARES",
-    "STEPHANE SABRYNA BEZERRA DA COSTA SILVA": "DANYELLA LAYSE SILVA TAVARES",
-    "DAVID ALDEMIR RODRIGUES DE LUCENA": "DANYELLA LAYSE SILVA TAVARES",
-    "MATHEUS VINICIUS MENDES DE LUNA": "DANYELLA LAYSE SILVA TAVARES",
-    "FRANCINEUZA SOUZA FERNANDES": "DANYELLA LAYSE SILVA TAVARES",
-    "LUANA BEATRIZ MENDONCA DOS SANTOS": "DANYELLA LAYSE SILVA TAVARES",
-}
-ASSIGNED_START_TIMES = {
-    "MAGALY GALVAO": "07:00",
-    "RENATA RATTACASO DA SILVA": "07:00",
-    "JOSE EDSON DA SILVA": "08:40",
-    "WESLEY HENRIQUE TRAJANO DA SILVA": "09:00",
-    "INGRYD SCAMPARINI DA SILVA NASCIMENTO": "09:30",
-    "ANNE BEATRIZ DA SILVA LIMA": "09:40",
-    "ANTHONY GULTHIERREZ JOANES SOARES SILVA": "10:00",
-    "CAROLINA DE MELLO ARAUJO": "10:20",
-    "GUILHERME ANTONIO DE OLIVEIRA SILVA": "10:00",
-    "STEPHANE SABRYNA BEZERRA DA COSTA SILVA": "10:20",
-    "DAVID ALDEMIR RODRIGUES DE LUCENA": "12:00",
-    "MATHEUS VINICIUS MENDES DE LUNA": "12:20",
-    "FRANCINEUZA SOUZA FERNANDES": "12:20",
-    "LUANA BEATRIZ MENDONCA DOS SANTOS": "13:00",
-    "GABRIELY SILVA DE OLIVEIRA": "07:00",
-    "TATIANE EMANUELE RODRIGUES NUNES": "07:00",
-    "MARIA DO CARMO DA SILVA": "07:00",
-    "RWITIYIANA MARIA DOS SANTOS": "07:00",
-    "HYAGO HENRIQUE DE OLIVEIRA PATRIOTA": "07:30",
-    "INGRID IANARA VIEIRA SILVA": "07:30",
-    "JULIANA BATISTA DA SILVA": "07:30",
-    "RAYANE LIRA DA SILVA": "07:50",
-    "MARIA PAULA DA SILVA": "08:00",
-    "MARIA THAUANY SANTOS DA SILVA": "08:20",
-    "WALLERYA GLLEYSIELLE FERREIRA DE BRITO": "08:20",
-    "LEONARDO JOAO FERREIRA ARAUJO SILVA": "08:30",
-    "EMANUELLY ALVES DOS SANTOS": "08:40",
-    "ISMAELE DA SILVA NUNES": "08:40",
-}
+# A escala de cada colaborador (supervisora e horário de entrada) vem
+# diretamente das colunas SUPERVISOR e HORÁRIO do arquivo data/colaboradores.csv.
+# Para adicionar, remover ou mudar um colaborador, basta editar a planilha
+# (ou enviar um CSV atualizado pelo app) — não é necessário mexer no código.
 WORKDAY_MINUTES = 6 * 60 + 20
 PAUSE_1_OFFSET = 90
 MEAL_OFFSET = 195
@@ -94,41 +38,53 @@ st.set_page_config(
 st.markdown(
     """
     <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600;700&display=swap');
+
     :root {
-        --bg: #eef2f4;
+        /* Paleta "quadro de turno": tinta indigo quase-preta sobre ardósia clara,
+           com latão (o carimbo do relógio de ponto) como cor de assinatura. */
+        --bg: #e9edf4;
         --surface: #ffffff;
-        --surface-soft: #f6f8fa;
-        --ink: #111827;
-        --muted: #5b6675;
-        --line: #d9e0e7;
-        --primary: #0f766e;
-        --primary-dark: #134e4a;
-        --accent: #d97706;
-        --blue: #2563eb;
-        --success: #15803d;
-        --danger: #dc2626;
-        --danger-soft: #fff1f2;
+        --surface-soft: #f3f5f9;
+        --ink: #10182b;
+        --muted: #5c6780;
+        --line: #d7dce8;
+        --brass: #a8710a;
+        --brass-soft: #fbf1de;
+        --signal: #22409b;
+        --signal-soft: #eaeefb;
+        --ok: #15754f;
+        --ok-soft: #e7f6ee;
+        --danger: #b3261e;
+        --danger-soft: #fbeae9;
+        --font-sans: 'IBM Plex Sans', 'Segoe UI', sans-serif;
+        --font-mono: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
     }
 
     .stApp {
-        background: var(--bg);
+        background:
+            linear-gradient(180deg, rgba(16, 24, 43, 0.04), rgba(16, 24, 43, 0) 220px),
+            var(--bg);
     }
 
     .block-container {
-        padding-top: 1.15rem;
+        padding-top: 1.1rem;
         padding-bottom: 2.5rem;
         max-width: 1120px;
     }
 
-    h1, h2, h3 {
-        color: var(--ink);
-        letter-spacing: 0;
+    html, body, [class*="css"] {
+        font-family: var(--font-sans);
     }
 
-    h1 {
-        font-size: 2rem;
-        line-height: 1.15;
-        margin-bottom: 0.25rem;
+    h1, h2, h3 {
+        color: var(--ink);
+        letter-spacing: -0.01em;
+        font-family: var(--font-sans);
+    }
+
+    h2, h3 {
+        font-weight: 700;
     }
 
     p, label, span {
@@ -137,192 +93,362 @@ st.markdown(
 
     div[data-testid="stCaptionContainer"] p {
         color: var(--muted);
-        font-size: 0.96rem;
+        font-size: 0.94rem;
     }
 
+    /* ---------- Cabeçalho / quadro de turno ---------- */
     .app-hero {
-        background: var(--surface);
-        border: 1px solid var(--line);
-        border-left: 6px solid var(--primary);
-        border-radius: 8px;
-        padding: 1.15rem 1.25rem;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.5rem;
+        background: var(--ink);
+        border-radius: 10px;
+        padding: 1.35rem 1.5rem;
         margin-bottom: 1rem;
-        box-shadow: 0 12px 28px rgba(17, 24, 39, 0.08);
+        box-shadow: 0 16px 32px rgba(16, 24, 43, 0.18);
+        overflow: hidden;
+    }
+
+    .app-hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+            repeating-linear-gradient(90deg, rgba(255,255,255,0.035) 0 1px, transparent 1px 34px);
+        pointer-events: none;
+    }
+
+    .app-hero .hero-eyebrow {
+        font-family: var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        font-size: 0.72rem;
+        color: var(--brass);
+        font-weight: 600;
+        margin: 0 0 0.3rem 0;
     }
 
     .app-hero h1 {
-        color: var(--ink);
+        color: #ffffff;
         margin: 0;
-        font-size: 2rem;
+        font-size: 1.85rem;
+        font-weight: 700;
     }
 
     .app-hero p {
-        color: var(--muted);
-        margin: 0.35rem 0 0 0;
-        max-width: 760px;
-        font-size: 0.98rem;
+        color: #b9c1d6;
+        margin: 0.4rem 0 0 0;
+        max-width: 620px;
+        font-size: 0.94rem;
+        line-height: 1.5;
     }
 
+    .hero-stamp {
+        flex-shrink: 0;
+        text-align: center;
+        border: 1px solid rgba(255,255,255,0.16);
+        border-radius: 8px;
+        padding: 0.6rem 1.1rem;
+        background: rgba(255,255,255,0.04);
+    }
+
+    .hero-stamp .stamp-label {
+        font-family: var(--font-mono);
+        font-size: 0.64rem;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        color: #8b96b3;
+        margin-bottom: 0.2rem;
+    }
+
+    .hero-stamp .stamp-value {
+        font-family: var(--font-mono);
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--brass);
+        letter-spacing: 0.02em;
+    }
+
+    @media (max-width: 700px) {
+        .app-hero {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+
+    /* ---------- Chips de contagem ---------- */
+    .supervisor-chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin: -0.3rem 0 1.1rem 0;
+    }
+
+    .supervisor-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 0.4rem 0.8rem;
+        font-size: 0.83rem;
+        font-weight: 600;
+        color: var(--muted);
+    }
+
+    .supervisor-chip b {
+        font-family: var(--font-mono);
+        color: var(--ink);
+        font-weight: 700;
+    }
+
+    .supervisor-chip.total {
+        background: var(--ink);
+        border-color: var(--ink);
+        color: #b9c1d6;
+    }
+
+    .supervisor-chip.total b {
+        color: var(--brass);
+    }
+
+    /* ---------- Painéis / expanders / inputs ---------- */
     div[data-testid="stExpander"] {
         background: var(--surface);
         border: 1px solid var(--line);
         border-radius: 8px;
-        box-shadow: 0 10px 24px rgba(17, 24, 39, 0.06);
+        box-shadow: 0 8px 20px rgba(16, 24, 43, 0.05);
     }
 
-    div[data-testid="stSelectbox"] label,
-    div[data-testid="stFileUploader"] label {
-        color: var(--ink);
+    div[data-testid="stExpander"] summary {
         font-weight: 650;
     }
 
-    div[data-baseweb="select"] > div {
-        background: var(--surface);
-        border-color: var(--line);
-        border-radius: 8px;
-        min-height: 48px;
-        box-shadow: 0 8px 20px rgba(17, 24, 39, 0.05);
+    div[data-testid="stSelectbox"] label,
+    div[data-testid="stMultiSelect"] label,
+    div[data-testid="stTextInput"] label,
+    div[data-testid="stFileUploader"] label,
+    div[data-testid="stDateInput"] label {
+        color: var(--ink);
+        font-weight: 650;
+        font-size: 0.88rem;
     }
 
+    div[data-baseweb="select"] > div,
+    div[data-baseweb="input"] > div,
+    div[data-baseweb="base-input"] {
+        background: var(--surface);
+        border-color: var(--line) !important;
+        border-radius: 6px;
+        min-height: 46px;
+    }
+
+    div[data-baseweb="tag"] {
+        background: var(--signal) !important;
+        border-radius: 4px !important;
+    }
+
+    /* ---------- KPIs ---------- */
     .kpi-card {
         background: var(--surface);
         border: 1px solid var(--line);
-        border-left: 5px solid var(--primary);
+        border-left: 3px solid var(--signal);
         border-radius: 8px;
-        padding: 0.9rem 1rem;
-        box-shadow: 0 10px 24px rgba(17, 24, 39, 0.07);
-        min-height: 96px;
+        padding: 0.85rem 1rem;
+        min-height: 92px;
     }
 
     .kpi-card .kpi-label {
+        font-family: var(--font-mono);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
         color: var(--muted);
-        font-size: 0.86rem;
-        font-weight: 700;
-        margin-bottom: 0.4rem;
+        font-size: 0.72rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
     }
 
     .kpi-card .kpi-value {
         color: var(--ink);
-        font-size: 2rem;
+        font-family: var(--font-mono);
+        font-size: 1.85rem;
         line-height: 1;
-        font-weight: 750;
+        font-weight: 700;
     }
 
     .kpi-card.time {
-        border-left-color: var(--blue);
+        border-left-color: var(--brass);
     }
 
     .kpi-card.workday {
-        border-left-color: var(--accent);
+        border-left-color: var(--ok);
     }
 
     .kpi-card.absences {
         border-left-color: var(--danger);
     }
 
+    /* ---------- Tabela ---------- */
     div[data-testid="stDataFrame"] {
         border: 1px solid var(--line);
         border-radius: 8px;
         overflow: hidden;
-        box-shadow: 0 10px 24px rgba(17, 24, 39, 0.07);
     }
 
     div[data-testid="stTabs"] button {
         color: var(--muted);
-        font-weight: 700;
+        font-weight: 650;
     }
 
     div[data-testid="stTabs"] button[aria-selected="true"] {
-        color: var(--primary-dark);
+        color: var(--ink);
+        border-bottom-color: var(--brass) !important;
     }
 
-    div[data-testid="stDownloadButton"] button {
-        border-radius: 8px;
-        border: 1px solid var(--primary);
-        background: var(--primary);
+    /* ---------- Botões ---------- */
+    div[data-testid="stDownloadButton"] button,
+    div[data-testid="stFormSubmitButton"] button,
+    div.stButton button[kind="primary"] {
+        border-radius: 6px;
+        border: 1px solid var(--ink);
+        background: var(--ink);
         color: white;
-        font-weight: 750;
-        min-height: 46px;
+        font-weight: 650;
+        min-height: 44px;
     }
 
-    div[data-testid="stDownloadButton"] button:hover {
-        border-color: var(--primary-dark);
-        background: var(--primary-dark);
+    div[data-testid="stDownloadButton"] button:hover,
+    div.stButton button[kind="primary"]:hover {
+        border-color: var(--brass);
+        background: #1a2340;
         color: white;
     }
 
+    /* ---------- Cartão de escala + linha do tempo ---------- */
     .schedule-card {
         border: 1px solid var(--line);
-        border-left: 5px solid var(--primary);
         border-radius: 8px;
-        padding: 1rem;
+        padding: 1rem 1.1rem;
         margin-bottom: 0.85rem;
         background: var(--surface);
-        box-shadow: 0 10px 24px rgba(17, 24, 39, 0.07);
+        position: relative;
+    }
+
+    .schedule-card::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        border-radius: 8px 0 0 8px;
+        background: var(--signal);
+    }
+
+    .schedule-card.absent::before {
+        background: var(--danger);
     }
 
     .schedule-card.absent {
-        border-left-color: var(--danger);
         background: var(--danger-soft);
     }
 
-    .absence-badge {
-        display: inline-block;
-        margin-top: 0.55rem;
-        padding: 0.28rem 0.5rem;
-        border-radius: 8px;
-        background: var(--danger);
-        color: white;
-        font-size: 0.78rem;
-        font-weight: 750;
-    }
-
-    .absence-summary {
-        border: 1px solid #fecaca;
-        border-left: 5px solid var(--danger);
-        border-radius: 8px;
-        background: var(--danger-soft);
-        color: #7f1d1d;
-        font-weight: 700;
-        padding: 0.85rem 1rem;
-        margin: 0.85rem 0 1rem 0;
-    }
-
-    .history-item {
-        border: 1px solid var(--line);
-        border-left: 4px solid var(--danger);
-        border-radius: 8px;
-        background: var(--surface);
-        padding: 0.75rem 0.9rem;
-        min-height: 74px;
-        box-shadow: 0 6px 14px rgba(17, 24, 39, 0.05);
-    }
-
-    .history-person {
-        color: var(--ink);
-        font-weight: 780;
-        line-height: 1.25;
-        margin-bottom: 0.35rem;
-    }
-
-    .history-meta {
-        color: var(--muted);
-        font-size: 0.86rem;
-        font-weight: 620;
-        line-height: 1.45;
+    .card-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.75rem;
     }
 
     .schedule-card strong {
         display: block;
         color: var(--ink);
-        font-size: 1.03rem;
-        line-height: 1.25;
-        margin-bottom: 0.25rem;
+        font-size: 1.02rem;
+        font-weight: 700;
+        line-height: 1.3;
     }
 
-    .schedule-card span {
+    .schedule-card .card-meta {
         color: var(--muted);
-        font-size: 0.9rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-top: 0.15rem;
+    }
+
+    .card-meta .clock {
+        font-family: var(--font-mono);
+        color: var(--ink);
+        font-weight: 600;
+    }
+
+    .absence-badge {
+        flex-shrink: 0;
+        display: inline-block;
+        padding: 0.28rem 0.55rem;
+        border-radius: 5px;
+        background: var(--danger);
+        color: white;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        white-space: nowrap;
+    }
+
+    .absence-summary {
+        border: 1px solid #f3c6c3;
+        border-left: 3px solid var(--danger);
+        border-radius: 8px;
+        background: var(--danger-soft);
+        color: #7a201a;
+        font-weight: 650;
+        padding: 0.8rem 1rem;
+        margin: 0.85rem 0 1rem 0;
+        font-size: 0.92rem;
+    }
+
+    /* timeline: barra proporcional do turno com os 3 intervalos de pausa */
+    .shift-timeline {
+        margin-top: 0.75rem;
+    }
+
+    .timeline-bar {
+        display: flex;
+        width: 100%;
+        height: 10px;
+        border-radius: 5px;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        background: var(--surface-soft);
+    }
+
+    .timeline-bar span {
+        height: 100%;
+    }
+
+    .timeline-bar .seg-work {
+        background: var(--signal-soft);
+    }
+
+    .timeline-bar .seg-p1,
+    .timeline-bar .seg-p2 {
+        background: var(--brass);
+    }
+
+    .timeline-bar .seg-lunch {
+        background: var(--ok);
+    }
+
+    .timeline-labels {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 0.3rem;
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        color: var(--muted);
         font-weight: 600;
     }
 
@@ -330,66 +456,96 @@ st.markdown(
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 0.45rem;
-        margin-top: 0.7rem;
+        margin-top: 0.75rem;
     }
 
     .pause-pill {
         background: var(--surface-soft);
         border: 1px solid var(--line);
-        border-left: 4px solid var(--primary);
-        border-radius: 8px;
-        padding: 0.55rem 0.65rem;
-        font-size: 0.86rem;
+        border-left: 3px solid var(--signal);
+        border-radius: 6px;
+        padding: 0.5rem 0.65rem;
+        font-size: 0.82rem;
         color: var(--ink);
+        font-weight: 600;
+    }
+
+    .pause-pill .clock {
+        font-family: var(--font-mono);
         font-weight: 650;
     }
 
-    .pause-pill.p1 {
-        background: #f8fafc;
-        border-left-color: var(--blue);
+    .pause-pill.p1,
+    .pause-pill.p2 {
+        background: var(--brass-soft);
+        border-left-color: var(--brass);
     }
 
     .pause-pill.p20 {
-        background: #fffaf0;
-        border-left-color: var(--accent);
-    }
-
-    .pause-pill.p2 {
-        background: #f7fdf9;
-        border-left-color: var(--success);
+        background: var(--ok-soft);
+        border-left-color: var(--ok);
     }
 
     .pause-pill.supervisor {
-        background: #f8fafc;
-        border-left-color: var(--primary);
+        background: var(--signal-soft);
+        border-left-color: var(--signal);
     }
 
     .pause-pill.done {
-        background: #ecfdf3;
-        border-color: #bbf7d0;
-        border-left-color: var(--success);
-        color: #14532d;
+        background: var(--ok-soft);
+        border-color: #b7e0c9;
+        border-left-color: var(--ok);
+        color: #0e4b32;
     }
 
     .pause-checks {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 0.55rem;
-        margin: -0.25rem 0 0.9rem 0.35rem;
+        margin: -0.25rem 0 0.9rem 0.1rem;
     }
 
     .pause-checks label {
+        font-weight: 650;
+        font-size: 0.85rem;
+    }
+
+    /* ---------- Histórico ---------- */
+    .history-item {
+        border: 1px solid var(--line);
+        border-left: 3px solid var(--danger);
+        border-radius: 8px;
+        background: var(--surface);
+        padding: 0.7rem 0.9rem;
+        min-height: 70px;
+    }
+
+    .history-person {
+        color: var(--ink);
         font-weight: 700;
+        line-height: 1.25;
+        margin-bottom: 0.3rem;
+    }
+
+    .history-meta {
+        color: var(--muted);
+        font-size: 0.83rem;
+        font-weight: 600;
+        line-height: 1.5;
+    }
+
+    .history-meta .clock {
+        font-family: var(--font-mono);
     }
 
     @media (max-width: 700px) {
         .block-container {
-            padding-left: 0.75rem;
-            padding-right: 0.75rem;
+            padding-left: 0.7rem;
+            padding-right: 0.7rem;
         }
 
-        h1 {
-            font-size: 1.55rem;
+        .app-hero h1 {
+            font-size: 1.4rem;
         }
 
         .pause-grid {
@@ -401,12 +557,12 @@ st.markdown(
         }
 
         .kpi-card {
-            padding: 0.8rem;
-            min-height: 86px;
+            padding: 0.75rem;
+            min-height: 82px;
         }
 
         .kpi-card .kpi-value {
-            font-size: 1.7rem;
+            font-size: 1.5rem;
         }
 
         .history-item {
@@ -453,20 +609,26 @@ def normalize_data(df: pd.DataFrame) -> pd.DataFrame:
     for column in ("NOME", "SUPERVISOR", "STATUS", "HORÁRIO"):
         normalized[column] = normalized[column].fillna("").astype(str).str.strip()
 
+    normalized["NOME"] = normalized["NOME"].str.upper()
     normalized["SUPERVISOR"] = normalized["SUPERVISOR"].str.upper()
     normalized["STATUS"] = normalized["STATUS"].str.upper()
+    normalized["HORÁRIO"] = normalized["HORÁRIO"].str.slice(0, 5)
+
+    total_rows = len(normalized)
     normalized = normalized[normalized["STATUS"].eq("ATIVO")].copy()
-    normalized["SUPERVISOR"] = normalized["NOME"].str.upper().map(ASSIGNED_SUPERVISORS)
-    normalized["HORÁRIO"] = normalized["NOME"].str.upper().map(ASSIGNED_START_TIMES)
-    normalized = normalized.dropna(subset=["SUPERVISOR"])
-    normalized = normalized.dropna(subset=["HORÁRIO"])
+    normalized = normalized[normalized["NOME"].ne("")].copy()
     normalized = normalized[normalized["SUPERVISOR"].isin(TARGET_SUPERVISORS)].copy()
 
     normalized["HORÁRIO_ORDENACAO"] = pd.to_datetime(
         normalized["HORÁRIO"], format="%H:%M", errors="coerce"
     )
+    ignored_rows = total_rows - len(normalized.dropna(subset=["HORÁRIO_ORDENACAO"]))
     normalized = normalized.dropna(subset=["HORÁRIO_ORDENACAO"])
+    normalized = normalized.drop_duplicates(subset=["NOME", "SUPERVISOR"], keep="last")
     normalized = normalized.sort_values(["SUPERVISOR", "HORÁRIO_ORDENACAO", "NOME"])
+
+    normalized.attrs["ignored_rows"] = ignored_rows
+    normalized.attrs["total_rows"] = total_rows
     return normalized
 
 
@@ -825,6 +987,47 @@ def calculate_adjusted_schedule(
     return adjusted.reset_index(drop=True)
 
 
+def build_shift_timeline(row: pd.Series) -> str:
+    """Barra proporcional do turno com os 3 intervalos de pausa marcados.
+
+    É construída a partir dos horários reais da linha (funciona tanto para a
+    escala automática quanto para horários ajustados manualmente).
+    """
+    try:
+        entrada = parse_clock(row["Entrada"])
+        saida = parse_clock(row["Saída"])
+        p1_start = parse_clock(extract_interval_start(row["Pausa 1 (10 min)"]))
+        lunch_start = parse_clock(extract_interval_start(row["Pausa 20 min"]))
+        p2_start = parse_clock(extract_interval_start(row["Pausa 2 (10 min)"]))
+    except ValueError:
+        return ""
+
+    total = (saida - entrada).total_seconds() / 60
+    if total <= 0:
+        return ""
+
+    segments = [
+        ("seg-work", max((p1_start - entrada).total_seconds() / 60, 0)),
+        ("seg-p1", 10),
+        ("seg-work", max((lunch_start - (p1_start + timedelta(minutes=10))).total_seconds() / 60, 0)),
+        ("seg-lunch", 20),
+        ("seg-work", max((p2_start - (lunch_start + timedelta(minutes=20))).total_seconds() / 60, 0)),
+        ("seg-p2", 10),
+        ("seg-work", max((saida - (p2_start + timedelta(minutes=10))).total_seconds() / 60, 0)),
+    ]
+
+    bar = "".join(
+        f'<span class="{css_class}" style="width:{(minutes / total) * 100:.2f}%"></span>'
+        for css_class, minutes in segments
+        if minutes > 0
+    )
+
+    return f"""<div class="shift-timeline">
+<div class="timeline-bar">{bar}</div>
+<div class="timeline-labels"><span>{row["Entrada"]}</span><span>{row["Saída"]}</span></div>
+</div>"""
+
+
 def render_mobile_cards(
     schedule: pd.DataFrame,
     absent_names: set[str],
@@ -842,16 +1045,22 @@ def render_mobile_cards(
         pause_1_class = " done" if pause_1_done else ""
         pause_20_class = " done" if pause_20_done else ""
         pause_2_class = " done" if pause_2_done else ""
+        timeline_html = build_shift_timeline(row)
         st.markdown(
             f"""<div class="schedule-card{absent_class}">
+<div class="card-top">
+<div>
 <strong>{row["Colaborador"]}</strong>
-<span>Entrada {row["Entrada"]} · Saída {row["Saída"]}</span>
+<div class="card-meta">Entrada <span class="clock">{row["Entrada"]}</span> · Saída <span class="clock">{row["Saída"]}</span></div>
+</div>
 {absent_badge}
+</div>
+{timeline_html}
 <div class="pause-grid">
-<div class="pause-pill p1{pause_1_class}">Pausa 1: {row["Pausa 1 (10 min)"]}</div>
-<div class="pause-pill p20{pause_20_class}">Pausa 20: {row["Pausa 20 min"]}</div>
-<div class="pause-pill p2{pause_2_class}">Pausa 2: {row["Pausa 2 (10 min)"]}</div>
-<div class="pause-pill supervisor">Supervisora: {row["Supervisor"]}</div>
+<div class="pause-pill p1{pause_1_class}">Pausa 1 <span class="clock">{row["Pausa 1 (10 min)"]}</span></div>
+<div class="pause-pill p20{pause_20_class}">Almoço <span class="clock">{row["Pausa 20 min"]}</span></div>
+<div class="pause-pill p2{pause_2_class}">Pausa 2 <span class="clock">{row["Pausa 2 (10 min)"]}</span></div>
+<div class="pause-pill supervisor">Supervisora {row["Supervisor"]}</div>
 </div>
 </div>""",
             unsafe_allow_html=True,
@@ -882,7 +1091,7 @@ def style_schedule_table(
     def mark_absent_rows(row: pd.Series) -> list[str]:
         if row["Colaborador"] in absent_names:
             return [
-                "background-color: #fff1f2; color: #7f1d1d; font-weight: 700;"
+                "background-color: #fbeae9; color: #7a201a; font-weight: 700;"
                 for _ in row
             ]
         return ["" for _ in row]
@@ -898,9 +1107,11 @@ def style_schedule_table(
         for column_name, pause_key in pause_columns.items():
             if (row["Colaborador"], pause_key) in pause_status and column_name in column_names:
                 styles[column_names.index(column_name)] = (
-                    "background-color: #ecfdf3; color: #14532d; font-weight: 800;"
+                    "background-color: #e7f6ee; color: #0e4b32; font-weight: 800;"
                 )
         return styles
+
+    clock_columns = ["Entrada", "Pausa 1 (10 min)", "Pausa 20 min", "Pausa 2 (10 min)", "Saída"]
 
     return (
         df.style.set_table_styles(
@@ -908,35 +1119,61 @@ def style_schedule_table(
                 {
                     "selector": "thead th",
                     "props": [
-                        ("background-color", "#f6f8fa"),
-                        ("color", "#111827"),
+                        ("background-color", "#10182b"),
+                        ("color", "#ffffff"),
                         ("font-weight", "700"),
-                        ("border-color", "#d9e0e7"),
+                        ("font-family", "'IBM Plex Sans', sans-serif"),
+                        ("text-transform", "uppercase"),
+                        ("letter-spacing", "0.04em"),
+                        ("font-size", "0.78rem"),
+                        ("border-color", "#10182b"),
                     ],
                 },
                 {
                     "selector": "tbody td",
                     "props": [
-                        ("border-color", "#d3d9d2"),
+                        ("border-color", "#d7dce8"),
+                        ("font-family", "'IBM Plex Sans', sans-serif"),
                     ],
+                },
+                {
+                    "selector": "tbody tr:hover td",
+                    "props": [("background-color", "#f3f5f9")],
                 },
             ]
         )
         .set_properties(
+            subset=[c for c in clock_columns if c in df.columns],
+            **{"font-family": "'IBM Plex Mono', monospace", "font-weight": "600"},
+        )
+        .set_properties(
             subset=["Pausa 1 (10 min)"],
-            **{"background-color": "#f8fafc", "font-weight": "650"},
+            **{"background-color": "#fbf1de"},
         )
         .set_properties(
             subset=["Pausa 20 min"],
-            **{"background-color": "#fffaf0", "font-weight": "650"},
+            **{"background-color": "#e7f6ee"},
         )
         .set_properties(
             subset=["Pausa 2 (10 min)"],
-            **{"background-color": "#f7fdf9", "font-weight": "650"},
+            **{"background-color": "#fbf1de"},
         )
         .apply(mark_absent_rows, axis=1)
         .apply(mark_done_pauses, axis=1)
     )
+
+
+def schedule_to_excel_bytes(schedule: pd.DataFrame) -> bytes:
+    from io import BytesIO
+
+    buffer = BytesIO()
+    with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
+        schedule.to_excel(writer, index=False, sheet_name="Escala")
+        worksheet = writer.sheets["Escala"]
+        for column_cells in worksheet.columns:
+            max_length = max(len(str(cell.value)) for cell in column_cells if cell.value is not None)
+            worksheet.column_dimensions[column_cells[0].column_letter].width = max_length + 4
+    return buffer.getvalue()
 
 
 def render_kpi(label: str, value: str | int, variant: str = "") -> None:
@@ -979,10 +1216,17 @@ def render_history_rows(df: pd.DataFrame, key_prefix: str) -> None:
 
 
 st.markdown(
-    """
+    f"""
     <section class="app-hero">
-        <h1>Controle de Pausas</h1>
-        <p>Escala de pausas por supervisora, controle de faltas por data e histórico para acompanhar a operação.</p>
+        <div>
+            <p class="hero-eyebrow">Quadro de turno · Operação</p>
+            <h1>Controle de Pausas</h1>
+            <p>Escala por supervisora, controle de faltas por data e histórico para acompanhar a operação.</p>
+        </div>
+        <div class="hero-stamp">
+            <div class="stamp-label">Hoje</div>
+            <div class="stamp-value">{datetime.now().strftime('%d/%m/%Y')}</div>
+        </div>
     </section>
     """,
     unsafe_allow_html=True,
@@ -1011,6 +1255,13 @@ except Exception as error:
 
 init_db()
 
+ignored_rows = data.attrs.get("ignored_rows", 0)
+if ignored_rows:
+    st.warning(
+        f"{ignored_rows} linha(s) da planilha foram ignoradas por falta de SUPERVISOR "
+        "válido, HORÁRIO em formato HH:MM ou STATUS diferente de ATIVO."
+    )
+
 supervisor_options = sorted(
     data["SUPERVISOR"].unique(),
     key=lambda value: SUPERVISOR_ORDER.get(value, 99),
@@ -1018,7 +1269,19 @@ supervisor_options = sorted(
 supervisor_labels = [TARGET_SUPERVISORS.get(value, value.title()) for value in supervisor_options]
 label_to_supervisor = dict(zip(supervisor_labels, supervisor_options))
 
-filter_col_1, filter_col_2 = st.columns([1.2, 1])
+supervisor_counts = data["SUPERVISOR"].value_counts()
+chips_html = "".join(
+    f'<span class="supervisor-chip">{TARGET_SUPERVISORS.get(sup, sup.title())} '
+    f'<b>{supervisor_counts.get(sup, 0)}</b></span>'
+    for sup in supervisor_options
+)
+st.markdown(
+    f'<div class="supervisor-chip-row">{chips_html}'
+    f'<span class="supervisor-chip total">Total <b>{len(data)}</b></span></div>',
+    unsafe_allow_html=True,
+)
+
+filter_col_1, filter_col_2, filter_col_3 = st.columns([1.1, 0.8, 1.1])
 selected_labels = filter_col_1.multiselect(
     "Supervisora",
     supervisor_labels,
@@ -1037,6 +1300,16 @@ selected_time = filter_col_2.selectbox("Horário de entrada", time_options)
 
 if selected_time != "Todos":
     supervisor_data = supervisor_data[supervisor_data["HORÁRIO"].eq(selected_time)]
+
+search_query = filter_col_3.text_input(
+    "Buscar colaborador",
+    placeholder="Digite um nome...",
+    help="Filtra a escala pelo nome do colaborador.",
+)
+if search_query.strip():
+    supervisor_data = supervisor_data[
+        supervisor_data["NOME"].str.contains(search_query.strip(), case=False, na=False)
+    ]
 
 date_col, absence_col = st.columns([0.85, 1.6])
 selected_date = date_col.date_input(
@@ -1166,11 +1439,27 @@ with metric_col_3:
 with metric_col_4:
     render_kpi("Faltas no dia", len(absent_names), "absences")
 
-st.subheader("Escala de pausas")
+schedule_header_col, export_csv_col, export_xlsx_col = st.columns([2.2, 0.9, 0.9])
+schedule_header_col.subheader("Escala de pausas")
 
 if schedule.empty:
     st.info("Nenhum colaborador encontrado para os filtros selecionados.")
 else:
+    export_csv_col.download_button(
+        "Baixar CSV",
+        data=schedule.to_csv(index=False).encode("utf-8-sig"),
+        file_name=f"escala_pausas_{selected_date.isoformat()}.csv",
+        mime="text/csv",
+        use_container_width=True,
+    )
+    export_xlsx_col.download_button(
+        "Baixar Excel",
+        data=schedule_to_excel_bytes(schedule),
+        file_name=f"escala_pausas_{selected_date.isoformat()}.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        use_container_width=True,
+    )
+
     card_tab, table_tab = st.tabs(["Cartões", "Tabela"])
     with card_tab:
         render_mobile_cards(schedule, absent_names, pause_status, selected_date)
